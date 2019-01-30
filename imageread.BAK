@@ -1,0 +1,365 @@
+<!doctype html public "-//w3c//dtd html 4.01//en">
+<html>
+<head>
+    <link rel="stylesheet" type="text/css" href="../../Exp1.css">
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-2022-jp">
+    <title>画像ファイルの読み込みと処理</title>
+    <style type="text/css">
+    <!--
+    h3 {
+        marigin-top:0em;
+    }
+    -->
+    </style>
+</head>
+
+<body>
+<h1 id="top">2007年度後期　情報工学実験I（プログラミング）<br/>　3.画像ファイルの読み込みと処理</h1>
+
+
+<div class="index" style="width:30em">
+<p class="title">目　次</p>
+<ul>
+    <li><p><a href="#chap01">1.概　要</a></p>
+        <ul>
+            <li><a href="#chap0101">1.1 作製するプログラム</a></li>
+            <li><a href="#chap0102">1.2 必要とされる文法事項</a></li>
+        </ul>
+    </li>
+    <li style="margin-top:1em"><a href="#ex0301">課題3.1 PBMまたはPGMアスキー形式画像ファイルの読み込み</a></li>
+</ul>
+</div>
+
+
+<h2 id="chap01">1.概　要</h2>
+<h3 id="chap0101">1.1 作製するプログラム</h3>
+<ul>
+    <li>PBMまたはPGM形式の画像ファイルを読み込み，何らかの処理をしてファイルに出力するプログラム．</li>
+</ul>
+
+<h3 id="chap0102">1.2 必要とされる文法事項</h3>
+<ul>
+    <li>ファイル入力</li>
+    <li>ファイル出力</li>
+    <li>構造体</li>
+    <li>2次元配列</li>
+    <li>配列を引数に持つ関数</li>
+</ul>
+
+
+<!--************************ Top of Excersize 3.1 ************************-->
+<div class="excersize">
+<p class="probtitle" id="ex0301">[課題3.1]　PBMまたはPGMアスキー形式画像ファイルの読み込み</p>
+<p class="problink_top">
+<a href="#ex0301bottom">課題の末尾へ↓</a>　
+<a href="#ex0302">課題3.2へ↓↓</a>　
+</p>
+<p>
+　PBMまたはPGMアスキーフォーマットの画像ファイルを読み込む関数ReadPNMMonoFileを作製し，更にそれらのテスト行なうプログラムを表3.1の仕様で作製する．実行例を図3.1(a)，図3.1(b)，図3.1(c)に示す．
+</p>
+<p>
+　読み込み画像ファイルを表3.3のいずれにした場合でも，正しく動作することを確認する．出力されたファイルについては，「<a href="../../application/pnmcompareexe.lzh">PNM Compare</a>」で入力した画像と出力した画像が同等であることを確認すること．
+</p>
+<p>
+　リスト3.1にこの課題で作製するプログラムのひな形を示す．コメントで指示された部分を実装する．
+</p>
+
+<!--======================== Top of Table 3.1 ========================-->
+<p class="toptitle">表3.1 課題3.1の仕様</p>
+<div class="topics" style="width:90%">
+<ul>
+    <li>関数ReadPNMMonoFileの仕様は，表3.2の通りとする．引数の変数名は変更してもよいが，関数名，引数の数，型，順序はそのまま用いること．</li>
+    <li>画素値を保存する配列はmain関数内で宣言する．行数と列数はいずれも256とし，それを表す文字列をマクロ定義すること．</li>
+    <li>テストプログラムはリスト3.1のようにし，コメントで指示された部分を実装する．</li>
+    <li>マジックナンバー，横画素数，縦画素数，最大輝度を記憶するために，リスト3.1に記述した構造体を定義し，利用する．各メンバに記憶される値は，リスト3.1のコメントの通りとする．</li>
+    <li>入力ファイル名と出力ファイル名はキーボードから対話型で，この順に入力する．</li>
+    <li>画像ファイルを開けなかったか，読み込んだファイルが適切でなかった場合は，その旨表示し，画像の出力を行なわない．</li>
+    <li>ファイルに出力できなかった場合は，その旨表示する．</li>
+    <li>適切なファイルを正常に読み込み，その内容をファイルに出力できた場合は，その旨表示すると共に，ヘッダ情報を表示する．</li>
+</ul>
+</div>
+<!--======================== Bottom of Table 3.1 ========================-->
+
+
+<!--======================== Top of Table 3.2 ========================-->
+<p class="toptitle" style="margin-top:1em">表3.2 関数ReadPNMMonoFileの仕様</p>
+<div class="function">
+
+<p class="prototype">
+PNMHeader ReadPNMMonoFile(char fname[],unsigned char y[][MAX_PIXEL]);
+</p>
+<dl class="func_expln">
+<dt>[機　能]</dt>
+<dd>
+　PBMまたはPGMアスキー形式の画像ファイルfnameからヘッダ情報と画素値を読み込む．ヘッダ情報は戻り値の形で，画素値は引数yの内容を更新することによって，この関数の呼び出し元に与える．
+</dd>
+
+<dt>[戻り値]</dt>
+<dd>
+<p>
+　読み込んだファイルのヘッダ情報．マジックナンバーがP1の場合の最大輝度は-1とする．ただし，以下の場合は，全メンバの値を-1とする．
+</p>
+
+<ul>
+    <li>引数で指定されたファイルを開けなかったとき．</li>
+    <li>マジックナンバーがP1またはP2でないとき．</li>
+    <li>横画素数または縦画素数が0以下または画素値配列の大きさを超えるとき．</li>    <li>最大輝度が0以下または255を超えるとき．</li>
+    <li>ヘッダに記述された横画素数と縦画素数から求められる全画素数より実際に書き込まれている画素値の数が少ないとき．</li>
+    
+</ul>
+
+</dd>
+<dt>[作製上の注意]</dt>
+<dd>
+<ul>
+    <li>ファイルは<strong>バイナリモード</strong>で開く．</li>
+    <li>ヘッダ中にコメントがある場合にも対応する．</li>
+    <li>この関数内では，キーボードからの入力を一切行なわない．</li>
+    <li>この関数内では，ディスプレイへの表示を一切行なわない．</li>
+    <li>ヘッダ情報の読み取りの処理については，<a href="readpnmheader.html">関数ReadPNMHeader及び関数isPNMSeparator</a>を利用してよい．これらを利用する場合には，リスト3.1のコメントで示した箇所にその内容を貼り付ける．</li>
+</ul>
+</dd>
+</dl>
+</div>
+<!--======================== Bottom of Table 3.2 ========================-->
+
+
+
+<!--======================== Top of List 3.1 ========================-->
+<pre class="program" style="width:40em">
+<code>/* 課題3.1 PBMまたはPGMアスキー形式画像ファイルの読み込み */
+/* 出席番号，提出者氏名 */
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+/* 必要に応じて追加する */
+
+#define MAX_FNAME 256   /* ファイル名の最大長 */
+#define MAX_PIXEL 256   /* 扱える最大画素数 */
+
+/* PNMヘッダ構造体 */
+typedef struct {
+    int Magic;  /* マジックナンバー：整数部のみ */
+    int HSize;  /* 横画素数 */
+    int VSize;  /* 縦画素数 */
+    int MaxY;   /* 最大輝度 */
+} PNMHeader;
+
+
+/* PBM/PGMファイル出力関数 */
+int WritePNMMonoFile(char fname[],PNMHeader head,unsigned char y[][MAX_PIXEL])
+{
+
+    /* 課題2.2で実装済 */
+
+}
+
+
+/*--------------------------------------------------------------------------*/
+/* ReadPNMMonoFileでReadPNMHeader（及びisPNMSeparator）を利用する場合は，   */
+/* この位置に貼り付ける．                                                   */
+/*--------------------------------------------------------------------------*/
+
+
+/* PBM/PGMファイル読み込み関数 */
+/*   char fname[]:読み込みファイル名                       */
+/*   unsigned char y[][MAX_PIXEL]:読み込まれた画像（更新） */
+PNMHeader ReadPNMMonoFile(char fname[],unsigned char y[][MAX_PIXEL])
+{
+
+    /* ファイルを読み込み用にバイナリモードで開く */
+    /* ファイルが開けたか否か調べる */
+
+    /* ヘッダ情報の読み込み */
+        /* リスト3.2の関数を利用してよい */
+
+    /* 読み込まれたヘッダ情報の検査 */
+        /* 最大輝度の検査は読み込みファイルがPGMの場合のみ */
+
+    /* 画素値の読み込み */
+        /* ヘッダ情報の画素数に達していなくても，     */
+        /* 読み込むべきデータがないときは読み込まない */
+        /* 読み込んだ結果をyの各要素に代入する */
+
+    /* ファイルを閉じる */
+
+}
+
+
+int main(int argc,char *argv[])
+{
+    unsigned char y[MAX_PIXEL][MAX_PIXEL];
+    /* 必要に応じて変数を宣言する */
+
+    /* 読み込みファイル名を入力 */
+    /* 出力ファイル名を入力 */
+
+    /* 画像ファイルの読み込み */
+        /* ReadMonoFileを利用する */
+
+    /* 画像ファイルの出力 */
+        /* 画像ファイルを読み込めた場合のみ実行する */
+        /* WritePNMMonoFileを利用する */
+
+    /* 処理状態の表示 */
+        /* 正常に処理できなかった場合はこの位置とは限らない */
+
+    return 0;
+}
+</code></pre>
+<p class="bottomtitle">
+リスト3.1　課題3.1で作製するプログラムのひな形
+</p>
+<!--======================== Bottom of List 3.1 ========================-->
+
+
+<!--======================== Top of Table 3.3 ========================-->
+<table>
+<caption>表3.3 課題3.1のプログラムに対する入力例</caption>
+<tr>
+    <th>入力条件</th>
+    <th>ファイル名</th>
+    <th>画像</th>
+    <th>実行例</th>
+    <th>備考</th>
+</tr>
+<tr>
+    <th>(1)</th>
+    <td><a href="lenna_bin.pbm">lenna_bin.pbm</a></td>
+    <td><img src="lenna_bin.png" alt="lenna_bin"></td>
+    <td rowspan="4" colspan="1"><a href="#figure0301a">図3.1(a)</a></td>
+    <td></td>
+</tr>
+<tr>
+    <th>(2)</th>
+    <td><a href="auto_bin.pbm">auto_bin.pbm</a></td>
+    <td><img src="auto_bin.png" alt="auto_bin"></td>
+    <td></td>
+</tr>
+<tr>
+    <th>(3)</th>
+    <td><a href="mandrill_gray.pgm">mandrill_gray.pgm</a></td>
+    <td><img src="mandrill_gray.png" alt="mandrill_gray"></td>
+    <td></td>
+</tr>
+<tr>
+    <th>(4)</th>
+    <td><a href="home_gray.pgm">home_gray.pgm</a></td>
+    <td><img src="home_gray.png" alt="home_gray"></td>
+    <td></td>
+</tr>
+<tr>
+    <th>(5)</th>
+    <td><a href="lenna_bin2.pbm">lenna_bin2.pbm</a></td>
+    <td></td>
+    <td rowspan="8" colspan="1"><a href="#figure0301b">図3.1(b)</a></td>
+    <td>横画素数が0</td>
+</tr>
+<tr>
+    <th>(6)</th>
+    <td><a href="lenna_bin3.pbm">lenna_bin3.pbm</a></td>
+    <td></td>
+    <td>縦画素数が0</td>
+</tr>
+<tr>
+    <th>(7)</th>
+    <td><a href="auto_bin2.pbm">auto_bin2.pbm</a></td>
+    <td></td>
+    <td>画素値が不足</td>
+</tr>
+<tr>
+    <th>(8)</th>
+    <td><a href="mandrill_gray2.pgm">mandrill_gray2.pgm</a></td>
+    <td></td>
+    <td>最大輝度が0</td>
+</tr>
+<tr>
+    <th>(9)</th>
+    <td><a href="mandrill_gray2.pgm">mandrill_gray2.pgm</a></td>
+    <td></td>
+    <td>最大輝度が512</td>
+</tr>
+<tr>
+    <th>(10)</th>
+    <td><a href="home_gray2.pgm">home_gray2.pgm</a></td>
+    <td></td>
+    <td>画素値が不足</td>
+</tr>
+<tr>
+    <th>(11)</th>
+    <td><a href="milkdrop_gray.pgm">milkdrop_gray.pgm</a></td>
+    <td><img src="milkdrop_gray.png" alt="milkdrop_gray"></td>
+    <td>横画素数が256を超える</td>
+</tr>
+<tr>
+    <th>(12)</th>
+    <td><a href="auto_color.ppm">auto_color.ppm</a></td>
+    <td><img src="auto_color.png" alt="auto_color"></td>
+    <td>マジックナンバーがP3</td>
+</tr>
+</table>
+<!--======================== Bottom of Table 3.3 ========================-->
+
+
+<!--======================== Top of Figure 3.1(a) ========================-->
+<pre class="cmdline" id="figure0301a" style="width:24em;">
+入力ファイル名:<span class="input">lenna_bin.pbm</span>
+出力ファイル名:<span class="input">ex0301.pbm</span>
+----- 読み込んだファイルを出力しました -----
+  マジックナンバー:P1
+          横画素数:196
+          縦画素数:228
+</pre>
+<p class="bottomtitle" style="margin-top:0em">図3.1(a) 課題3.1の実行例（入出力とも成功した場合）</p>
+<!--====================== Bottom of Figure 3.1(a) ======================-->
+
+
+<!--======================== Top of Figure 3.1(b) ========================-->
+<pre class="cmdline" id="figure0301b" style="width:30em;">
+入力ファイル名:<span class="input">mandrill_gray2.pgm</span>
+出力ファイル名:<span class="input">ex0301.pgm</span>
+***** ファイルが存在しないか，適切でないファイルです．*****
+</pre>
+<p class="bottomtitle" style="margin-top:0em">図3.1(b) 課題3.1の実行例（適切でないファイルを読み込んだ場合）</p>
+<!--====================== Bottom of Figure 3.1(b) ======================-->
+
+
+<!--======================== Top of Figure 3.1(c) ========================-->
+<pre class="cmdline" id="figure0301c" style="width:30em;">
+入力ファイル名:<span class="input">a.pgm</span>
+出力ファイル名:<span class="input">ex0301.pgm</span>
+***** ファイルが存在しないか，適切でないファイルです．*****
+</pre>
+<p class="bottomtitle" style="margin-top:0em">図3.1(c) 課題3.1の実行例（ファイルが開けない場合）</p>
+<!--====================== Bottom of Figure 3.1(c) ======================-->
+
+
+<p class="prob_bottom" id="ex0301bottom">課題3.1　ここまで</p>
+<p class="problink_bottom">
+<a href="#ex0301">課題の先頭へ↑</a>　
+<a href="#ex0302">課題3.2へ↓↓</a>　
+</p>
+</div>
+<!--*********************** Bottom of Excersize 3.1 ***********************-->
+
+
+<hr class="reset_float">
+<table class="link" id="tail">
+<tbody>
+    <tr>
+        <th rowspan="1" colspan="2">Jump to ...</th>
+    </tr>
+    <tr>
+        <td class="link">
+　　　<a href="../../progindex.html">←情報工学実験I　プログラミング</a><br>
+　<a href="http://xythos.tokyo-ct.ac.jp/dpt/j/">←←←情報工学科トップページ</a><br>
+<a href="http://www.tokyo-ct.ac.jp/">←←←←東京高専トップページ</a><br>
+        </td>
+        <td style="text-align:right" class="link">
+            <a href="../imageout/imageout.html">←2.画像ファイルの出力</a><br>
+        </td>
+    </tr>
+</tbody>
+</table>
+
+</body>
+</html>

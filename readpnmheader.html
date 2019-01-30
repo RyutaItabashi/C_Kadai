@@ -1,0 +1,300 @@
+<!doctype html public "-//w3c//dtd html 4.01//en">
+<html>
+<head>
+    <link rel="stylesheet" type="text/css" href="../../Exp1.css">
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-2022-jp">
+    <title>PNMヘッダ情報の読み込み</title>
+    <style type="text/css">
+    <!--
+    h3 {
+        marigin-top:0em;
+    }
+    -->
+    </style>
+</head>
+
+<body>
+<h1 id="top">2007年度後期　情報工学実験I（プログラミング）<br/>　PNMヘッダ情報の読み込み</h1>
+
+
+<div class="index" style="width:12em">
+<p class="title">目　次</p>
+<ul>
+    <li><a href="#chap01">1.概　要</li>
+    <li><a href="#chap02">2.各関数の仕様</a></li>
+    <li><a href="#chap03">3. ソースプログラム</a></li>
+</ul>
+</div>
+
+
+<h2 id="chap01">1.概　要</h2>
+<p>
+　このページでは，PNMヘッダ情報を読み込みに用いることのできる，関数ReadPNMHeader及びこの関数から呼び出されるisPNMSeparatorについて説明する．
+</p>
+
+<h2 id="chap02">2.各関数の仕様</h2>
+<p>
+　関数ReadPNMHeaderの仕様を表A.1に，関数isPNMSeparatorの仕様を表A.2に示す．
+</p>
+
+
+<!--======================== Top of Table A.1 ========================-->
+<p class="toptitle" style="margin-top:1em">表A.1 関数ReadPNMHeaderの仕様</p>
+<div class="function">
+
+<p class="prototype">
+PNMHeader ReadPNMHeader(FILE *in);
+</p>
+<dl class="func_expln">
+<dt>[機　能]</dt>
+<dd>
+　inで参照されるPBMまたはPGMアスキー形式の画像ファイルからヘッダ情報を読み込み，その内容を戻り値の形でこの関数の呼び出し元に与える．
+</dd>
+
+<dt>[使用方法] </dt>
+<dd>
+<p>
+　この関数の呼び出し元において，この関数の呼び出し前に読み込み先ファイルを読み込み用にバイナリモードで開き，それを指すポインタを引数として渡す．
+</p>
+<p>
+　この関数ではPNM画像ファイルにおける区切り文字を判定するために関数isPNMSeparatorを使用する．そのため，この関数のコードより前にisPNMSeparatorのコードを記述するか，プロトタイプ宣言をした上で，適切な位置にコードを記述する必要がある．
+</p>
+</dd>
+
+<dt>[適切なファイルを読み込んだ場合の動作]</dt>
+<dd>
+　戻り値の各メンバに読み込んだ値を設定する．inは次のファイル読み込み位置に設定されるので，この関数の呼び出し元では，それを引き続き画素値の読み込みに用いることができる．
+</dd>
+
+<dt>[適切でないファイルを読み込んだ場合の動作]</dt>
+<dd>
+<ul>
+    <li><p>マジックナンバーが適切でない場合</p>
+        <p>戻り値のメンバMagicを負の値に設定する．</p>
+    </li>
+    <li><p>横画素数，縦画素数，最大輝度が適切でない場合</p>
+<p>
+　0以上の整数を構成する文字以外の文字が現れた場合は，対応する戻り値のメンバの値を-1に設定する．
+</p>
+<p>
+　それ以外の場合は，戻り値のHSize，VSize，MaxYの各メンバに設定される値は，ファイルの内容により異なる．それらしい値が偶然に設定されることもある．従って，それらのメンバの値が0以下でない場合は，その後の画素値の読み込みを行ない，実際に読み込めた画素数や画素値との比較を行なわない限り，適切でないファイルか否かは判定できない．
+</p>
+    </li>
+</ul>
+</dd>
+</dl>
+</div>
+<!--======================== Bottom of Table A.1 ========================-->
+
+
+<!--======================== Top of Table A.2 ========================-->
+<p class="toptitle" style="margin-top:1em">表A.2 関数isPNMSeparatorの仕様</p>
+<div class="function">
+
+<p class="prototype">
+int isPNMSeparator(char c);
+</p>
+<dl class="func_expln">
+<dt>[機　能]</dt>
+<dd>
+　文字cがPNM画像ファイルで用いられる区切り文字（HT，LF，CR及びスペース）である場合は1を返し，そうでない場合は0を返す．
+</dd>
+</dl>
+</div>
+<!--======================== Bottom of Table A.2 ========================-->
+
+
+<h2 id="chap03">3.ソースプログラム</h2>
+<p>
+　リストA.1に示す．
+</p>
+
+<!--======================== Top of List A.1 ========================-->
+<pre class="program" style="width:46em">
+<code>/*--------------------------------------------------*/
+/*  PNM区切り文字判定                               */
+/*                                                  */
+/*    char c:判定される文字                         */
+/*    戻り値:cがPNMファイルで用いられる区切り文字で */
+/*           ある場合は1，そうでない場合は0．       */
+/*--------------------------------------------------*/
+int isPNMSeparator(char c)
+{
+    return c==0x9 ? 1 : (c==0xa ? 1 : (c==0xd ? 1 : (c==0x20 ? 1 : 0)));
+}
+
+
+/*--------------------------------------------------------------------*/
+/* PNMヘッダの読み込み                                                */
+/*                                                                    */
+/*   FILE *in:読み込みファイルを指すポインタ                          */
+/*                                                                    */
+/*     戻り値:読み込んだヘッダ情報を設定したPNMヘッダ構造体           */
+/*--------------------------------------------------------------------*/
+PNMHeader ReadPNMHeader(FILE *in)
+{
+    int pre;                        /* 前の読み込み文字 */
+    int c;                          /* 現在の読み込み文字：EOFに対応するためint型 */
+    int nItem;                      /* 読み込み済ヘッダ項目数 */
+    int n;                          /* 現在までに読み込んだ文字列を整数に変換した値 */
+    char isValidStr;                /* 0以上の整数を構成する文字列で */
+                                    /* あるか否かを表すフラグ        */
+    int nMagicLen;                  /* マジックナンバーの処理済文字数 */
+    int pos;                        /* 現在の読み込み文字の行における位置 */
+    PNMHeader ret={-1,-1,-1,-1};    /* 戻り値となるPNMヘッダ構造体 */
+                                    /* 全要素を-1に初期化 */
+    
+    /* 読み込み位置をファイルの先頭に設定 */
+    fseek(in,0,SEEK_SET);
+    
+    /* 初期化 */
+    pre=' ';        /* ' 'での初期化は，ファイル先頭に */
+                    /* 区切り文字がある場合への対処    */
+    nItem=0;
+    n=0;
+    isValidStr=1;
+    nMagicLen=0;
+    pos=0;
+    
+    c=fgetc(in);    /* 最初の文字の読み込み */
+    /* ファイルの終端に達するか，ヘッダ全項目を読み込むまで繰り返し */
+    while(c!=EOF && nItem<4) {
+        if(pos==0 && c=='#') {
+            /* 行の先頭が'#'の場合→コメント行 */
+            /* LFまで読み飛ばし */
+            c=fgetc(in);
+            while(c!='\n' && c!=EOF) {
+                c=fgetc(in);
+            }
+        } else if(!isPNMSeparator(c)){
+            /* 現在の文字が区切り文字ではない場合                   */
+            /*   →現在処理中の項目の文字列が終端に達していない場合 */
+            /* マジックナンバー */
+            if(nItem==0) {
+                /* 1文字目：'P'以外はマジックナンバーが負になるようにする */
+                if(nMagicLen==0) {
+                    if(c=='P') {
+                        ret.Magic=1;
+                    } else {
+                        ret.Magic=-1;
+                    }
+                    
+                } else if(nMagicLen==1) {
+                    /* 2文字目：'0'〜'6'以外はマジックナンバーが負になるようにする */
+                    if(c-'0'>0 && c-'0'<7) {
+                        ret.Magic=ret.Magic*(c-'0');
+                    } else {
+                        ret.Magic=-1;
+                    }
+                    
+                } else {
+                    /* 3文字以上あるときはマジックナンバーが負になるようにする */
+                    ret.Magic=-1;
+                }
+                
+                nMagicLen++;
+                
+            } else {
+                /* マジックナンバー以外：文字列の整数化 */
+                if(c>='0' && c<='9') {
+                    n=10*n+c-'0';
+                    
+                } else {
+                    isValidStr=0;
+                }
+            }
+            
+            pos++;    /* 現在の位置をインクリメント */
+            
+        } else if(!isPNMSeparator(pre)) {
+            /* 現在の文字が区切り文字であり，前の文字が区切り文字でない場合 */
+            /*   →現在処理中の項目の文字列が終端に達した場合               */
+            if(nItem!=0) {
+                if(!isValidStr) {
+                    n=-1;    /* 0以上の整数を構成する文字以外が用いられた場合は-1とする */
+                }
+                
+                switch(nItem) {
+                    /* 横画素数 */
+                    case 1:
+                        ret.HSize=n;
+                        break;
+                    /* 縦画素数 */
+                    case 2:
+                        ret.VSize=n;
+                        break;
+                    /* 最大輝度 */
+                    case 3:
+                        ret.MaxY=n;
+                        break;
+                }
+                
+                n=0;    /* 1つの項目の処理が終わったため，整数への変換値を初期化 */
+                isValidStr=1;
+                
+            } else {
+                /* マジックナンバー */
+                /* 2文字でない場合は-1に設定 */
+                if(nMagicLen!=2) {
+                    ret.Magic=-1;
+                }
+            }
+            
+            /* 読み込み項目数のインクリメント */
+            /* PBM形式で縦画素数を読み込んだ場合は，                    */
+            /* 最大輝度の処理を行なわないため，2を加え，nItem=4とする． */
+            if((ret.Magic==1 || ret.Magic==4) && nItem==2) {
+                nItem+=2;
+            } else {
+                nItem++;
+            }
+            
+            pos++;    /* 現在の位置をインクリメント */
+            
+        } else {
+            /* 前の文字も現在の文字も区切り文字である場合 */
+            /*   →区切り文字が連続する場合               */
+            pos++;    /* 現在の位置をインクリメント */
+        }
+        
+        /* 現在の文字がLFの場合は現在の位置を初期化 */
+        if(c=='\n') {
+            pos=0;
+        }
+
+        pre=c;
+        /* 次の文字の読み込み：ヘッダの全項目を読み込んだ場合は除く */
+        if(nItem<4) {
+            c=fgetc(in);
+        }
+    }
+    
+    return ret;
+}
+</code></pre>
+<p class="bottomtitle">
+リストA.1　PNMヘッダ情報読み込み関数及びPNM区切り文字判定関数
+</p>
+<!--======================== Bottom of List A.1 ========================-->
+
+
+<hr class="reset_float">
+<table class="link" id="tail">
+<tbody>
+    <tr>
+        <th rowspan="1" colspan="1">Jump to ...</th>
+    </tr>
+    <tr>
+        <td class="link">
+　　　　<a href="imageread.html">←3.画像ファイルの読み込みと処理</a><br>
+　　　<a href="../../progindex.html">←←情報工学実験I　プログラミング</a><br>
+　　<a href="../../../../index.html">←←←各種資料集</a><br>
+　<a href="http://xythos.tokyo-ct.ac.jp/dpt/j/">←←←←情報工学科トップページ</a><br>
+<a href="http://www.tokyo-ct.ac.jp/">←←←←←東京高専トップページ</a><br>
+        </td>
+    </tr>
+</tbody>
+</table>
+
+</body>
+</html>
